@@ -12,6 +12,8 @@ def objective_function(x):
 def ant_algorithm(num_ants, num_iterations, lower_bound, upper_bound):
     best_solution = None
     best_value = float('inf')
+    convergence = []  # Store convergence data
+
 
     for _ in range(num_iterations):
         solutions = np.random.uniform(low=lower_bound, high=upper_bound, size=num_ants)
@@ -22,8 +24,9 @@ def ant_algorithm(num_ants, num_iterations, lower_bound, upper_bound):
             if values[i] < best_value:
                 best_solution = solutions[i]
                 best_value = values[i]
+        convergence.append(best_value)  # Store convergence data
 
-    return best_solution, best_value
+    return best_solution, convergence
 
 # Particle Swarm Optimization
 def particle_swarm_optimization(num_particles, num_iterations, lower_bound, upper_bound):
@@ -37,6 +40,8 @@ def particle_swarm_optimization(num_particles, num_iterations, lower_bound, uppe
     global_best_value = personal_best_values[global_best_index]
 
     # PSO main loop
+    convergence = []  # Store convergence data
+
     for _ in range(num_iterations):
         inertia_weight = 0.5
         cognitive_weight = 1.5
@@ -60,7 +65,9 @@ def particle_swarm_optimization(num_particles, num_iterations, lower_bound, uppe
         global_best_position = personal_best_positions[global_best_index]
         global_best_value = personal_best_values[global_best_index]
 
-    return global_best_position, global_best_value
+        convergence.append(global_best_value)
+
+    return global_best_position, convergence
 
 # GUI Application
 class OptimizationApp(QMainWindow):
@@ -122,8 +129,8 @@ class OptimizationApp(QMainWindow):
         self.run_button.clicked.connect(self.run_optimization)
         self.layout.addWidget(self.run_button)
 
-        self.canvas = MatplotlibCanvas(self, width=5, height=4)
-        self.layout.addWidget(self.canvas)
+        self.convergence_canvas = MatplotlibCanvas(self, width=5, height=4)
+        self.layout.addWidget(self.convergence_canvas)
 
         self.time_label = QLabel('Time: 0 ms')
         self.layout.addWidget(self.time_label)
@@ -149,12 +156,15 @@ class OptimizationApp(QMainWindow):
         start_time = time.time()
 
         # Call Ant Algorithm or PSO with the loaded data
-        ant_result = ant_algorithm(num_ants=self.num_ants, num_iterations=self.num_iterations, lower_bound=self.lower_bound, upper_bound=self.upper_bound)
-        pso_result = particle_swarm_optimization(num_particles=self.num_particles, num_iterations=self.num_iterations, lower_bound=self.lower_bound, upper_bound=self.upper_bound)
+        ant_result, ant_convergence = ant_algorithm(num_ants=self.num_ants, num_iterations=self.num_iterations, lower_bound=self.lower_bound, upper_bound=self.upper_bound)
+        pso_result, pso_convergence = particle_swarm_optimization(num_particles=self.num_particles, num_iterations=self.num_iterations, lower_bound=self.lower_bound, upper_bound=self.upper_bound)
 
         end_time = time.time()
         elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds
-        self.time_label.setText(f'Time: {elapsed_time:.2f} ms\nAnt Algorithm Result: {ant_result}\nPSO Result: {pso_result}')
+        self.time_label.setText(f'Elapsed Time: {elapsed_time:.2f} ms\nAnt Algorithm Result: {ant_result:.5f}\nPSO Result: {pso_result:.5f}')
+        
+        # Plot convergence
+        self.convergence_canvas.plot_convergence(ant_convergence, pso_convergence)
 
 
 # Matplotlib Canvas for plotting
@@ -163,6 +173,16 @@ class MatplotlibCanvas(FigureCanvas):
         self.fig, self.ax = plt.subplots(figsize=(width, height), dpi=dpi)
         super().__init__(self.fig)
         self.setParent(parent)
+
+    def plot_convergence(self, ant_convergence, pso_convergence):
+        self.ax.clear()
+        iterations = np.arange(1, len(ant_convergence) + 1)
+        self.ax.plot(iterations, ant_convergence, label='Ant Algorithm', marker='o')
+        self.ax.plot(iterations, pso_convergence, label='PSO', marker='o')
+        self.ax.set_xlabel('Iteration')
+        self.ax.set_ylabel('Objective Function Value')
+        self.ax.legend()
+        self.draw()
 
 
 if __name__ == '__main__':
