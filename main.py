@@ -1,7 +1,7 @@
 import sys
 import time
 import numpy as np
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QFileDialog, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QLineEdit, QTextEdit
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
@@ -132,8 +132,14 @@ class OptimizationApp(QMainWindow):
         self.convergence_canvas = MatplotlibCanvas(self, width=5, height=4)
         self.layout.addWidget(self.convergence_canvas)
 
-        self.time_label = QLabel('Time: 0 ms')
-        self.layout.addWidget(self.time_label)
+        self.results_text_edit = QTextEdit(self)
+        self.results_text_edit.setReadOnly(True)
+        self.results_text_edit.setMaximumHeight(100)
+        self.layout.addWidget(self.results_text_edit)
+
+        self.copy_button = QPushButton('Copy Results', self)
+        self.copy_button.clicked.connect(self.copy_results)
+        self.layout.addWidget(self.copy_button)
 
         self.central_widget.setLayout(self.layout)
 
@@ -161,10 +167,15 @@ class OptimizationApp(QMainWindow):
 
         end_time = time.time()
         elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds
-        self.time_label.setText(f'Elapsed Time: {elapsed_time:.2f} ms\nAnt Algorithm Result: {ant_result:.5f}\nPSO Result: {pso_result:.5f}')
-        
+        results_text = f'Time: {elapsed_time:.2f} ms\nAnt Algorithm Result: {ant_result:.5f}\nPSO Result: {pso_result:.5f}'
+        self.results_text_edit.setPlainText(results_text)
+
         # Plot convergence
         self.convergence_canvas.plot_convergence(ant_convergence, pso_convergence)
+    
+    def copy_results(self):
+        clipboard = QApplication.clipboard()
+        clipboard.setText(self.results_text_edit.toPlainText())
 
 
 # Matplotlib Canvas for plotting
