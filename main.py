@@ -167,7 +167,7 @@ class OptimizationApp(QMainWindow):
 
         end_time = time.time()
         elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds
-        results_text = f'Time: {elapsed_time:.2f} ms\nAnt Algorithm Result: {ant_result:.5f}\nPSO Result: {pso_result:.5f}'
+        results_text = f'Time: {elapsed_time:.4f} ms\nAnt Algorithm Result: {ant_result:.5f}\nPSO Result: {pso_result:.5f}'
         self.results_text_edit.setPlainText(results_text)
 
         # Plot convergence
